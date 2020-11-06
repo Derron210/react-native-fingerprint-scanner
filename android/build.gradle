@@ -3,6 +3,14 @@ def safeExtGet(prop, fallback) {
 }
 
 buildscript {
+    repositories {
+        google()
+        maven { url "$rootDir/libs" }  // Local path to the push provisioning SDK
+        maven {
+            url "$rootDir/../node_modules/react-native/android"
+        }
+    }
+
     // The Android Gradle plugin is only required when opening the android folder stand-alone.
     // This avoids unnecessary downloads and potential conflicts when the library is included as a
     // module dependency in an application project.
@@ -38,10 +46,16 @@ android {
 repositories {
     mavenCentral()
     jcenter()
+    google()
+    maven { url "$rootDir/libs" }  // Local path to the push provisioning SDK
+    maven {
+        url "$rootDir/../node_modules/react-native/android"
+    }
 }
 
 dependencies {
     implementation 'com.facebook.react:react-native:+'
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
     // androidx:biometric now supports fingerprint back to Android v23
     implementation "androidx.biometric:biometric:1.0.1"
 
@@ -50,4 +64,6 @@ dependencies {
     // See https://github.com/uccmawei/FingerprintIdentify/issues/74
     // (translation https://translate.google.com/translate?sl=zh-CN&tl=en&u=https://github.com/uccmawei/FingerprintIdentify/issues/74)
     implementation "com.wei.android.lib:fingerprintidentify:${safeExtGet("fingerprintidentify", "1.2.6")}"
+
+    
 }

@@ -1,15 +1,22 @@
-package com.hieuvp.fingerprint;
+package com.derron210.fingerprintWithKey;
 
 import android.os.Build;
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.biometric.BiometricPrompt;
 import androidx.biometric.BiometricManager;
-import androidx.biometric.BiometricPrompt.AuthenticationCallback;
 import androidx.biometric.BiometricPrompt.PromptInfo;
 import androidx.fragment.app.FragmentActivity;
 
+import java.io.IOException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import com.facebook.react.bridge.LifecycleEventListener;
@@ -26,9 +33,18 @@ import com.wei.android.lib.fingerprintidentify.FingerprintIdentify;
 import com.wei.android.lib.fingerprintidentify.base.BaseFingerprint.ExceptionListener;
 import com.wei.android.lib.fingerprintidentify.base.BaseFingerprint.IdentifyListener;
 
+import java.security.KeyStore;
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
+import android.security.keystore.KeyGenParameterSpec;
+import android.security.keystore.KeyPermanentlyInvalidatedException;
+import android.security.keystore.KeyProperties;
 
-@ReactModule(name="ReactNativeFingerprintScanner")
-public class ReactNativeFingerprintScannerModule
+@RequiresApi(api = Build.VERSION_CODES.M)
+@ReactModule(name="ReactNativeFingerprintScannerWithKey")
+public class ReactNativeFingerprintScannerWithKeyModule
         extends ReactContextBaseJavaModule
         implements LifecycleEventListener
 {
@@ -38,18 +54,23 @@ public class ReactNativeFingerprintScannerModule
 
     private final ReactApplicationContext mReactContext;
     private BiometricPrompt biometricPrompt;
+    private boolean useKey = false;
+    private String keyName = "";
+    private KeyStore mKeyStore;
+    private KeyGenerator mKeyGenerator;
+    private Cipher mCihper;
 
     // for Samsung/MeiZu compat, Android v16-23
     private FingerprintIdentify mFingerprintIdentify;
 
-    public ReactNativeFingerprintScannerModule(ReactApplicationContext reactContext) {
+    public ReactNativeFingerprintScannerWithKeyModule(ReactApplicationContext reactContext) {
         super(reactContext);
         mReactContext = reactContext;
     }
 
     @Override
     public String getName() {
-        return "ReactNativeFingerprintScanner";
+        return "ReactNativeFingerprintScannerWithKey";
     }
 
     @Override
@@ -114,7 +135,21 @@ public class ReactNativeFingerprintScannerModule
         return biometricPrompt;
     }
 
-    private void biometricAuthenticate(final String title, final String subtitle, final String description, final String cancelButton, final Promise promise) {
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    private void biometricAuthenticate(final String title, final String subtitle, final String description, final String cancelButton, final boolean useKey,
+                                       final String keyName, final Promise promise) {
+        if(useKey && !keyName.isEmpty()) {
+            try {
+                if (!initCipher(keyName)) {
+                    promise.reject("KeyInvalidated", "Действие ключа было прекращено");
+                    return;
+                }
+            }
+            catch (Exception e){
+                promise.reject(e);
+            }
+        }
+
         UiThreadUtil.runOnUiThread(
             new Runnable() {
                 @Override
@@ -193,7 +228,8 @@ public class ReactNativeFingerprintScannerModule
     }
 
     @ReactMethod
-    public void authenticate(String title, String subtitle, String description, String cancelButton, final Promise promise) {
+    public void authenticate(String title, String subtitle, String description, String cancelButton,
+                             final boolean useKey, final String keyName, final Promise promise) {
         if (requiresLegacyAuthentication()) {
             legacyAuthenticate(promise);
         }
@@ -201,11 +237,22 @@ public class ReactNativeFingerprintScannerModule
             final String errorName = getSensorError();
             if (errorName != null) {
                 promise.reject(errorName, TYPE_BIOMETRICS);
-                ReactNativeFingerprintScannerModule.this.release();
+                ReactNativeFingerprintScannerWithKeyModule.this.release();
                 return;
             }
 
-            biometricAuthenticate(title, subtitle, description, cancelButton, promise);
+            biometricAuthenticate(title, subtitle, description, cancelButton, useKey, keyName, promise);
+        }
+    }
+
+    @ReactMethod
+    public void clearKey(String keyName, final Promise promise)  {
+        try {
+            createKey(keyName);
+            promise.resolve(true);
+        }
+        catch (Exception e) {
+            promise.reject(e);
         }
     }
 
@@ -258,7 +305,7 @@ public class ReactNativeFingerprintScannerModule
             new ExceptionListener() {
                 @Override
                 public void onCatchException(Throwable exception) {
-                    mReactContext.removeLifecycleEventListener(ReactNativeFingerprintScannerModule.this);
+                    mReactContext.removeLifecycleEventListener(ReactNativeFingerprintScannerWithKeyModule.this);
                 }
             }
         );
@@ -283,7 +330,7 @@ public class ReactNativeFingerprintScannerModule
         final String errorMessage = legacyGetErrorMessage();
         if (errorMessage != null) {
             promise.reject(errorMessage, TYPE_FINGERPRINT_LEGACY);
-            ReactNativeFingerprintScannerModule.this.release();
+            ReactNativeFingerprintScannerWithKeyModule.this.release();
             return;
         }
 
@@ -313,7 +360,7 @@ public class ReactNativeFingerprintScannerModule
                 } else {
                     promise.reject("AuthenticationFailed", TYPE_FINGERPRINT_LEGACY);
                 }
-                ReactNativeFingerprintScannerModule.this.release();
+                ReactNativeFingerprintScannerWithKeyModule.this.release();
             }
 
             @Override
@@ -322,5 +369,59 @@ public class ReactNativeFingerprintScannerModule
                 promise.reject("AuthenticationFailed", "DeviceLocked");
             }
         });
+    }
+
+    public SecretKey createKey(String keyName) throws InvalidAlgorithmParameterException, CertificateException, NoSuchAlgorithmException, IOException, KeyStoreException, NoSuchProviderException, NoSuchPaddingException {
+        // The enrolling flow for fingerprint. This is where you ask the user to set up fingerprint
+        // for your flow. Use of keys is necessary if you need to know if the set of
+        // enrolled fingerprints has changed.
+            // Set the alias of the entry in Android KeyStore where the key will appear
+            // and the constrains (purposes) in the constructor of the Builder
+
+        mKeyStore = KeyStore.getInstance("AndroidKeyStore");
+        mKeyGenerator = KeyGenerator
+                .getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore");
+
+        mKeyStore.load(null);
+
+        KeyGenParameterSpec.Builder builder = new KeyGenParameterSpec.Builder(keyName,
+                KeyProperties.PURPOSE_ENCRYPT |
+                        KeyProperties.PURPOSE_DECRYPT)
+                .setBlockModes(KeyProperties.BLOCK_MODE_CBC)
+                // Require the user to authenticate with a fingerprint to authorize every use
+                // of the key
+                .setUserAuthenticationRequired(true)
+                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7);
+
+        // This is a workaround to avoid crashes on devices whose API level is < 24
+        // because KeyGenParameterSpec.Builder#setInvalidatedByBiometricEnrollment is only
+        // visible on API level +24.
+        // Ideally there should be a compat library for KeyGenParameterSpec.Builder but
+        // which isn't available yet.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            builder.setInvalidatedByBiometricEnrollment(true);
+        }
+        mKeyGenerator.init(builder.build());
+        return mKeyGenerator.generateKey();
+    }
+
+    private boolean initCipher(String keyName) throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException, IOException, KeyStoreException, InvalidAlgorithmParameterException, InvalidKeyException, NoSuchProviderException, NoSuchPaddingException {
+        try {
+            mKeyStore = KeyStore.getInstance("AndroidKeyStore");
+            mKeyStore.load(null);
+            SecretKey key = (SecretKey) mKeyStore.getKey(keyName, null);
+            if (key == null) {
+                key = createKey(keyName);
+            }
+            mCihper = Cipher.getInstance(KeyProperties.KEY_ALGORITHM_AES + "/"
+                    + KeyProperties.BLOCK_MODE_CBC + "/"
+                    + KeyProperties.ENCRYPTION_PADDING_PKCS7);
+            mCihper.init(Cipher.ENCRYPT_MODE, key);
+            return true;
+        } catch (KeyPermanentlyInvalidatedException e) {
+            return false;
+        } catch (Exception e) {
+            throw e;
+        }
     }
 }

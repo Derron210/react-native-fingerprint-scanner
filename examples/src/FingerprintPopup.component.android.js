@@ -10,13 +10,13 @@ import {
   Platform,
 } from 'react-native';
 
-import FingerprintScanner from 'react-native-fingerprint-scanner';
+import FingerprintScanner from 'react-native-fingerprint-scanner-with-key';
 import styles from './FingerprintPopup.component.styles';
 import ShakingText from './ShakingText.component';
 
 
 
-// Based on https://github.com/hieuvp/react-native-fingerprint-scanner/blob/master/examples/src/FingerprintPopup.component.android.js
+// Based on https://github.com/hieuvp/react-native-fingerprint-scanner-with-key/blob/master/examples/src/FingerprintPopup.component.android.js
 // - this example component supports both the legacy device-specific (Android < v23) and
 //   current (Android >= 23) biometric APIs
 // - your lib and implementation may not need both

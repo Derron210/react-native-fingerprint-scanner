@@ -5,10 +5,10 @@ import {
 } from 'react-native';
 import createError from './createError';
 
-const { ReactNativeFingerprintScanner } = NativeModules;
+const { ReactNativeFingerprintScannerWithKey } = NativeModules;
 
-const authCurrent = (title, subTitle, description, cancelButton, resolve, reject) => {
-  ReactNativeFingerprintScanner.authenticate(title, subTitle, description, cancelButton)
+const authCurrent = (title, subTitle, description, cancelButton, useKey, keyName, resolve, reject) => {
+  ReactNativeFingerprintScannerWithKey.authenticate(title, subTitle, description, cancelButton, useKey, keyName)
     .then(() => {
       resolve(true);
     })
@@ -25,7 +25,7 @@ const authLegacy = (onAttempt, resolve, reject) => {
     }
   });
 
-  ReactNativeFingerprintScanner.authenticate()
+  ReactNativeFingerprintScannerWithKey.authenticate()
     .then(() => {
       DeviceEventEmitter.removeAllListeners('FINGERPRINT_SCANNER_AUTHENTICATION');
       resolve(true);
@@ -38,7 +38,7 @@ const authLegacy = (onAttempt, resolve, reject) => {
 
 const nullOnAttempt = () => null;
 
-export default ({ title, subTitle, description, cancelButton, onAttempt }) => {
+export default ({ title, subTitle, description, cancelButton, useKey, keyName, onAttempt }) => {
   return new Promise((resolve, reject) => {
     if (!title) {
       title = description ? description : "Log In";
@@ -57,10 +57,12 @@ export default ({ title, subTitle, description, cancelButton, onAttempt }) => {
       onAttempt = nullOnAttempt;
     }
 
+    if (!keyName) useKey = false;
+
     if (Platform.Version < 23) {
       return authLegacy(onAttempt, resolve, reject);
     }
 
-    return authCurrent(title, subTitle, description, cancelButton, resolve, reject);
+    return authCurrent(title, subTitle, description, cancelButton, useKey, keyName, resolve, reject);
   });
 }

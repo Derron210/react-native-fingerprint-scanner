@@ -1,8 +1,11 @@
-# React Native Fingerprint Scanner
+# React Native Fingerprint Scanner With Key
 
-[![React Native Version](https://img.shields.io/badge/react--native-latest-blue.svg?style=flat-square)](http://facebook.github.io/react-native/releases)
-[![Version](https://img.shields.io/npm/v/react-native-fingerprint-scanner.svg)](https://www.npmjs.com/package/react-native-fingerprint-scanner)
-[![NPM](https://img.shields.io/npm/dm/react-native-fingerprint-scanner.svg)](https://www.npmjs.com/package/react-native-fingerprint-scanner)
+This library was forked from [react-native-fingerprint-scanner](https://github.com/hieuvp/react-native-fingerprint-scanner). 
+The only difference is that this library can create key and store it in keystore, and that key will be invalidated, if
+system biometric settings was changed. It might be useful if it is required to check if new
+fingerprints was added.
+
+Currently works only on Android.
 
 React Native Fingerprint Scanner is a [React Native](http://facebook.github.io/react-native/) library for authenticating users with Fingerprint (TouchID).
 

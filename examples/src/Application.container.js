@@ -6,7 +6,7 @@ import {
   View,
   AppState
 } from 'react-native';
-import FingerprintScanner from 'react-native-fingerprint-scanner';
+import FingerprintScanner from 'react-native-fingerprint-scanner-with-key';
 
 import styles from './Application.container.styles';
 import FingerprintPopup from './FingerprintPopup.component';
@@ -64,7 +64,7 @@ class Application extends Component {
           React Native Fingerprint Scanner
         </Text>
         <Text style={styles.subheading}>
-          https://github.com/hieuvp/react-native-fingerprint-scanner
+          https://github.com/hieuvp/react-native-fingerprint-scanner-with-key
         </Text>
 
         <TouchableOpacity

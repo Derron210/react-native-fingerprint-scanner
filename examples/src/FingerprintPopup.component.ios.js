@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { AlertIOS } from 'react-native';
-import FingerprintScanner from 'react-native-fingerprint-scanner';
+import FingerprintScanner from 'react-native-fingerprint-scanner-with-key';
 
 class FingerprintPopup extends Component {
 

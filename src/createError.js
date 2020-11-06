@@ -18,6 +18,7 @@ const ERRORS = {
   DeviceLockedPermanent: 'Authentication was not successful, device must be unlocked via password.',
   DeviceOutOfMemory: 'Authentication could not proceed because there is not enough free memory on the device.',
   HardwareError: 'A hardware error occurred.',
+  KeyInvalidated: 'Key was invalidated'
 };
 
 class FingerprintScannerError extends Error {

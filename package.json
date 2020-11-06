@@ -1,6 +1,6 @@
 {
-  "name": "react-native-fingerprint-scanner",
-  "version": "6.0.0",
+  "name": "react-native-fingerprint-scanner-with-key",
+  "version": "6.0.1",
   "description": "React Native Biometrics Scanner for Android and iOS",
   "main": "index.js",
   "keywords": [
@@ -24,8 +24,8 @@
   "peerDependencies": {
     "react-native": ">=0.60 <1.0.0"
   },
-  "homepage": "https://github.com/hieuvp/react-native-fingerprint-scanner#readme",
-  "repository": "https://github.com/hieuvp/react-native-fingerprint-scanner.git",
+  "homepage": "https://github.com/Derron210/react-native-fingerprint-scanner-with-key",
+  "repository": "https://github.com/Derron210/react-native-fingerprint-scanner-with-key",
   "author": "Hieu Van (https://github.com/hieuvp)",
   "license": "MIT",
   "types": "index.d.ts",

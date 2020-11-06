@@ -10,7 +10,7 @@
     "prop-types": "15.6.1",
     "react": "16.8.6",
     "react-native": "0.60.0",
-    "react-native-fingerprint-scanner": "file:../"
+    "react-native-fingerprint-scanner-with-key": "file:../"
   },
   "devDependencies": {
     "metro-react-native-babel-preset": "^0.54.1"
