@@ -1,13 +1,11 @@
 # React Native Fingerprint Scanner With Key
 
+React Native Fingerprint Scanner With Key is a [React Native](http://facebook.github.io/react-native/) library for authenticating users with Fingerprint (TouchID).
+
 This library was forked from [react-native-fingerprint-scanner](https://github.com/hieuvp/react-native-fingerprint-scanner). 
-The only difference is that this library can create key and store it in keystore, and that key will be invalidated, if
-system biometric settings was changed. It might be useful if it is required to check if new
+The only difference is that this library can reject authenication's method promise if system's biometric settings was changed. It might be useful if it is required to check if new
 fingerprints was added.
 
-Currently works only on Android.
-
-React Native Fingerprint Scanner is a [React Native](http://facebook.github.io/react-native/) library for authenticating users with Fingerprint (TouchID).
 
 ## Table of Contents
 
@@ -31,11 +29,6 @@ It provides a **Default View** that prompts the user to place a finger to the iP
 4.0.0 Prefers the new native Android BiometricPrompt lib on any Android >= v23 (M)
 4.0.0 also DEPRECATES support for the legacy library that provides support for Samsung & MeiZu phones
 
-3.0.2 and below: 
-Using an expandable Android Fingerprint API library, which combines [Samsung](http://developer.samsung.com/galaxy/pass#) and [MeiZu](http://open-wiki.flyme.cn/index.php?title=%E6%8C%87%E7%BA%B9%E8%AF%86%E5%88%ABAPI)'s official Fingerprint API.
-
-Samsung and MeiZu's Fingerprint SDK supports most devices which system versions less than Android 6.0.
-
 <div>
 <img src="https://github.com/hieuvp/react-native-fingerprint-scanner/raw/master/screenshots/android-availability.png" height="600">
 <img src="https://github.com/hieuvp/react-native-fingerprint-scanner/raw/master/screenshots/android-authentication.gif" height="600">
@@ -44,11 +37,11 @@ Samsung and MeiZu's Fingerprint SDK supports most devices which system versions 
 ## Installation
 
 ```sh
-$ npm install react-native-fingerprint-scanner --save
+$ npm install react-native-fingerprint-scanner-wtih-key --save
 ```
 or
 ```sh
-$ yarn add react-native-fingerprint-scanner
+$ yarn add react-native-fingerprint-scanner-with-key
 ```
 
 ### Automatic Configuration
@@ -59,7 +52,7 @@ $ cd ios && pod install
 
 For RN < 0.60, use react-native link to add the library to your project:
 ```sh
-$ react-native link react-native-fingerprint-scanner
+$ react-native link react-native-fingerprint-scanner-with-key
 ```
 
 ### Manual Configuration
@@ -67,7 +60,7 @@ $ react-native link react-native-fingerprint-scanner
 #### iOS
 
 1. In XCode, in the project navigator, right click `Libraries` ➜ `Add Files to [your project's name]`
-2. Go to `node_modules` ➜ `react-native-fingerprint-scanner` and add `ReactNativeFingerprintScanner.xcodeproj`
+2. Go to `node_modules` ➜ `react-native-fingerprint-scanner-with-key` and add `ReactNativeFingerprintScanner.xcodeproj`
 3. In XCode, in the project navigator, select your project. Add `libReactNativeFingerprintScanner.a` to your project's `Build Phases` ➜ `Link Binary With Libraries`
 4. Run your project (`Cmd+R`)
 
@@ -78,12 +71,12 @@ $ react-native link react-native-fingerprint-scanner
   - Add `new ReactNativeFingerprintScannerPackage()` to the list returned by the `getPackages()` method
 2. Append the following lines to `android/settings.gradle`:
   	```
-  	include ':react-native-fingerprint-scanner'
-  	project(':react-native-fingerprint-scanner').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-fingerprint-scanner/android')
+  	include ':react-native-fingerprint-scanner-with-key'
+  	project(':react-native-fingerprint-scanner-with-key').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-fingerprint-scanner-with-key/android')
   	```
 3. Insert the following lines inside the dependencies block in `android/app/build.gradle`:
   	```
-    implementation project(':react-native-fingerprint-scanner')
+    implementation project(':react-native-fingerprint-scanner-with-key')
   	```
 
 ### App Permissions
@@ -146,21 +139,21 @@ In your `Info.plist`:
 
 ## Compatibility
 
-* For Gradle < 3 you MUST install react-native-fingerprint-scanner at version <= 2.5.0
-* For RN >= 0.57 and/or Gradle >= 3 you MUST install react-native-fingerprint-scanner at version >= 2.6.0
-* For RN >= 0.60 you MUST install react-native-fingerprint-scanner at version >= 3.0.0
+* For Gradle < 3 you MUST install react-native-fingerprint-scanner-with-key at version <= 2.5.0
+* For RN >= 0.57 and/or Gradle >= 3 you MUST install react-native-fingerprint-scanner-with-key at version >= 2.6.0
+* For RN >= 0.60 you MUST install react-native-fingerprint-scanner-with-key at version >= 3.0.0
 * For Android native Face Unlock, MUST use >= 4.0.0
 
 ## Example
 
-[Example Source Code](https://github.com/hieuvp/react-native-fingerprint-scanner/tree/master/examples)
+[Example Source Code](https://github.com/hieuvp/react-native-fingerprint-scanner-with-key/tree/master/examples)
 
 **iOS Implementation**
 ```javascript
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { AlertIOS } from 'react-native';
-import FingerprintScanner from 'react-native-fingerprint-scanner';
+import FingerprintScanner from 'react-native-fingerprint-scanner-with-key';
 
 class FingerprintPopup extends Component {
 
@@ -204,7 +197,7 @@ import {
   Platform,
 } from 'react-native';
 
-import FingerprintScanner from 'react-native-fingerprint-scanner';
+import FingerprintScanner from 'react-native-fingerprint-scanner-with-key';
 import styles from './FingerprintPopup.component.styles';
 import ShakingText from './ShakingText.component';
 
@@ -342,24 +335,30 @@ componentDidMount() {
 }
 ```
 
-### `authenticate({ description, fallbackEnabled })`: (iOS)
+### `authenticate({ description, fallbackEnabled, useKey, keyName })`: (iOS)
 Starts Fingerprint authentication on iOS.
 
 - Returns a `Promise`
 - `description: String` - the string to explain the request for user authentication.
 - `fallbackEnabled: Boolean` - default to `true`, whether to display fallback button (e.g. Enter Password).
+- `useKey: Boolean`  - default to `false`, whether to check if biometric settings was changed
+- `keyName: String` - the string parameter which must contain UID for your app. Ignored, if `useKey` set to false. This is a SecretKey name for Android or UsersDefault key for containing evaluatedPolicyDomainState for iOS.
 
 ```javascript
 componentDidMount() {
   FingerprintScanner
-    .authenticate({ description: 'Scan your fingerprint on the device scanner to continue' })
+    .authenticate({ description: 'Scan your fingerprint on the device scanner to continue', useKey: true, keyName: 'MY_APP_UNIQUE_STRING' })
     .then(() => {
       this.props.handlePopupDismissed();
       AlertIOS.alert('Authenticated successfully');
     })
     .catch((error) => {
       this.props.handlePopupDismissed();
-      AlertIOS.alert(error.message);
+      if (error.keyWasInvalidated) {
+        AlertIOS.alert('Biometric settings was changed');
+      } else {
+        AlertIOS.alert(error.message);
+      }
     });
 }
 ```
@@ -373,6 +372,8 @@ Starts Fingerprint authentication on Android.
 - `description: String` the description text to display in the native Android popup
 - `cancelButton: String` the cancel button text to display in the native Android popup
 - `onAttempt: Function` - a callback function when users are trying to scan their fingerprint but failed.
+- `useKey: Boolean`  - default to `false`, whether to check if biometric settings was changed
+- `keyName: String` - the string parameter which must contain UID for your app. Ignored, if `useKey` set to false. This is a SecretKey name for Android or UsersDefault key for containing evaluatedPolicyDomainState for iOS.
 
 ```javascript
 componentDidMount() {
@@ -393,7 +394,7 @@ requiresLegacyAuthentication() {
 
 authCurrent() {
   FingerprintScanner
-    .authenticate({ title: 'Log in with Biometrics' })
+    .authenticate({ title: 'Log in with Biometrics', useKey: true, keyName: 'MY_APP_KEY_NAME', })
     .then(() => {
       this.props.onAuthenticate();
     });
@@ -429,6 +430,11 @@ componentWillUnmount() {
 }
 ```
 
+### `clearKey(keyName)`
+This method must be called to clear KeyInvalidated error, which is produced by authenicate() method after biometric settings was changed.
+This method creates new `SecretKey` with given keyname for android, or stores `evaluatedPolicyDomainState` in `UsersDefaults` for given name for iOS.
+
+
 ### `Types of Biometrics`
 
 | Value | OS | Description|
@@ -457,6 +463,7 @@ componentWillUnmount() {
 | FingerprintScannerNotSupported | Device does not support Fingerprint Scanner |
 | FingerprintScannerNotEnrolled  | Authentication could not start because Fingerprint Scanner has no enrolled fingers |
 | FingerprintScannerNotAvailable | Authentication could not start because Fingerprint Scanner is not available on the device |
+| KeyInvalidated | Biometric settings was changed |
 
 ## License
 

@@ -6,7 +6,7 @@
 #import "RCTUtils.h"
 #endif
 
-@implementation ReactNativeFingerprintScanner
+@implementation ReactNativeFingerprintScannerWithKey
 
 RCT_EXPORT_MODULE();
 
@@ -53,13 +53,21 @@ RCT_EXPORT_METHOD(isSensorAvailable: (RCTResponseSenderBlock)callback)
     }
 }
 
+RCT_EXPORT_METHOD(clearKey: (NSString *)keyName)
+{
+    NSUserDefaults *prefs = [NSUserDefaults standardUserDefaults];
+    [prefs setObject:nil forKey:keyName];
+}
+
 RCT_EXPORT_METHOD(authenticate: (NSString *)reason
                   fallback: (BOOL)fallbackEnabled
+                  useKey: (BOOL)useKey
+                  keyName: (NSString *)keyName
                   callback: (RCTResponseSenderBlock)callback)
 {
     LAContext *context = [[LAContext alloc] init];
     NSError *error;
-
+    
     // Toggle fallback button
     if (!fallbackEnabled) {
         context.localizedFallbackTitle = @"";
@@ -121,6 +129,21 @@ RCT_EXPORT_METHOD(authenticate: (NSString *)reason
 
              if (success) {
                  // Authenticated Successfully
+                 
+                 if (useKey) {
+                     NSUserDefaults *prefs = [NSUserDefaults standardUserDefaults];
+                     NSData *newPolicyDomain =  context.evaluatedPolicyDomainState;
+
+                     NSObject *myObject = [prefs objectForKey:keyName];
+                     
+                     if ([myObject isEqual:newPolicyDomain] || myObject == nil) {
+                         [prefs setObject:newPolicyDomain forKey:keyName];
+                     } else {
+                         callback(@[RCTJSErrorFromCodeMessageAndNSError(@"KeyInvalidated", @"Key was invalidated", nil)]);
+                         return;
+                     }
+                 }
+                 
                  callback(@[[NSNull null], @"Authenticated with Fingerprint Scanner."]);
                  return;
              }
